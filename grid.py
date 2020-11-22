@@ -1,13 +1,13 @@
 import numpy as np
 import pickle
-
+import glob
 from PyQt5 import QtWidgets, QtCore, uic
 import sys 
 import os
 import subprocess
 from grblesp32_qobject import GRBLESP32Client, STATE_READY
 
-prefix="z:\\yard_pano\\4"
+prefix="z:\\yard_pano\\7"
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -38,24 +38,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def search_grid_button_clicked(self):
-        az =np.arange(self.start_az_spinbox.value(), self.end_az_spinbox.value(), 10)
-        alt = np.arange(self.start_alt_spinbox.value(), self.end_alt_spinbox.value(), 5)
+        if not os.path.exists(prefix):
+            os.mkdir(prefix)
+
+        az =np.arange(self.start_az_spinbox.value(), self.end_az_spinbox.value(), self.az_increment.value())
+        alt = np.arange(self.start_alt_spinbox.value(), self.end_alt_spinbox.value(), self.alt_increment.value())
         xx, yy = np.meshgrid(az, alt)
         self.grid = np.vstack([xx.ravel(), yy.ravel()]).T
 
-        self.search_grid_timer = QtCore.QTimer()
-        self.search_grid_timer.timeout.connect(self.search_grid_next)
-        self.search_grid_timer.start(100)
-        self.state = "SEARCHING"
+        pto_vars = {}
+        self.grid_missing = []
+        for i in range(len(self.grid)):
+            grid_location = self.grid[i]
+            p = "test.%06.3f,%06.3f.jpg"% (grid_location[1], grid_location[0])
+            fname = os.path.join(prefix, p)
+            if not os.path.exists(fname):
+                self.grid_missing.append(self.grid[i])
+            pto_vars[p] = 0, self.grid[i][1], self.grid[i][0]
+        print(pto_vars)
+        pto_vars_fname = prefix + "\\pto_vars.pkl"
+        pickle.dump(pto_vars, open(pto_vars_fname, "wb"))
         self.grid_index = 0
-        #pto_vars_fname = prefix + "\\pto_vars"
-        #self.pto_vars = open(pto_vars_fname, "w")
-        self.pto_vars = {}
+        print(self.grid_missing)
+        if len(self.grid_missing):
+            self.search_grid_timer = QtCore.QTimer()
+            self.search_grid_timer.timeout.connect(self.search_grid_next)
+            self.search_grid_timer.start(100)
+            self.state = "SEARCHING"
+        else:
+            print("no work to do")
 
     def search_grid_next(self):
-        grid_location = self.grid[self.grid_index]
-        
-
+        grid_location = self.grid_missing[self.grid_index]
         if self.state == "SEARCHING":
             print("Move to", self.grid_index, grid_location)
             self.absolute_move_to(grid_location[0], grid_location[1])
@@ -66,28 +80,23 @@ class MainWindow(QtWidgets.QMainWindow):
             self.state = "DWELLING"
         # should wait for ok
         elif self.state == "DONE_MOVING":
-            print("At grid location %d of %d" % (self.grid_index, len(self.grid)))
+            print("At grid location %d of %d" % (self.grid_index, len(self.grid_missing)))
             # Will block UI for picture duration, should run in thread
-            p = "test.%06.3f,%06.3f.jpg"% (grid_location[0], grid_location[1])
+            p = "test.%06.3f,%06.3f.jpg"% (grid_location[1], grid_location[0])
             fname = os.path.join(prefix, p)
-            print(fname)
-            subprocess.call(["C:\\Program Files (x86)\\digiCamControl\\CameraControlCmd.exe", "/filename", fname , "/capturenoaf"])
+            subprocess.call(["C:\\Program Files (x86)\\digiCamControl\\CameraControlRemoteCmd.exe", "/c", "capturenoaf", fname])
+            #subprocess.call(["C:\\Program Files (x86)\\digiCamControl\\CameraControlCmd.exe", "/filename", fname , "/capturenoaf"])
             roll = 0
             pitch = grid_location[1]
             yaw = grid_location[0]
-            
-            self.pto_vars[p] = (roll, pitch, yaw)
-            pto_vars_fname = prefix + "\\pto_vars.pkl"
-            pickle.dump(self.pto_vars, open(pto_vars_fname, "wb"))
+                        
             self.state = "PICTURING"
         elif self.state == "PICTURING":
-            print("Grid index:", self.grid_index, "len(self.grid):", len(self.grid))
-            if self.grid_index == len(self.grid) - 1:
+            print("Grid index:", self.grid_index, "len(self.grid_mising):", len(self.grid_missing))
+            if self.grid_index == len(self.grid_missing) - 1:
                 print("at end")
                 self.search_grid_timer.stop()
                 del self.search_grid_timer
-                
-                #self.pto_vars.close()
                 self.state = "DONE"
             else:
                 self.grid_index += 1
