@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets, QtCore, uic
 import sys 
 import os
 from grblesp32_qobject import GRBLESP32Client
+from ramps_qobject import QRAMPSObject
 
 
 
@@ -34,10 +35,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.home_y_button.clicked.connect(self.home_y_button_clicked)
         self.dwell_button.clicked.connect(self.dwell_button_clicked)
 
-        self.grblesp32 = GRBLESP32Client()
+        self.grblesp32 = QRAMPSObject()
         self.grblesp32.messageSignal.connect(self.on_ramps_read)
-        self.grblesp32.statusSignal.connect(self.on_ramps_status)
-        self.grblesp32.stateSignal.connect(self.on_ramps_state)
+        #self.grblesp32.statusSignal.connect(self.on_ramps_status)
+        #self.grblesp32.stateSignal.connect(self.on_ramps_state)
 
         self.ramps_input.returnPressed.connect(self.line_entered)
 
