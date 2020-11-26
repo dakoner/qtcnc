@@ -37,8 +37,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.grblesp32 = QRAMPSObject()
         self.grblesp32.messageSignal.connect(self.on_ramps_read)
-        #self.grblesp32.statusSignal.connect(self.on_ramps_status)
-        #self.grblesp32.stateSignal.connect(self.on_ramps_state)
+        self.grblesp32.statusSignal.connect(self.on_ramps_status)
+        self.grblesp32.stateSignal.connect(self.on_ramps_state)
 
         self.ramps_input.returnPressed.connect(self.line_entered)
 
