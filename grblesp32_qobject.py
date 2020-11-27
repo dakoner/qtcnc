@@ -3,7 +3,7 @@ import sys
 from PyQt5 import QtCore, QtWebSockets, QtNetwork
 from PyQt5.QtCore import QUrl, QCoreApplication, QTimer
 
-HOSTNAME="grblesp.local"
+HOSTNAME="dykstrabot.local"
 
 STATE_INIT=0
 STATE_HOMING_X=1
