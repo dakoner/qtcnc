@@ -1,0 +1,14 @@
+[Unit]
+Description=MQTT adapter service
+After=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/qtcnc/mqtt_adapter.py
+User=pi
+Restart=always
+Environment=PYTHONPATH=/home/pi/gamepad_qobject/gamepad_qobject:/home/pi/mqtt_qobject/mqtt_qobject
+
