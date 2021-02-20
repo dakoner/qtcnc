@@ -1,0 +1,14 @@
+[Unit]
+Description=Scope service
+After=network-online.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/qtcnc/joystick.py
+User=pi
+Restart=always
+Environment=PYTHONPATH=/home/pi/mqtt_qobject/mqtt_qobject:/home/pi/qt_grbl
+
