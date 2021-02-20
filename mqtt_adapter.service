@@ -10,5 +10,5 @@ Type=simple
 ExecStart=/home/pi/qtcnc/mqtt_adapter.py
 User=pi
 Restart=always
-Environment=PYTHONPATH=/home/pi/mqtt_qobject/mqtt_qobject
+Environment=PYTHONPATH=/home/pi/mqtt_qobject/mqtt_qobject:/home/pi/qt_grbl
 
