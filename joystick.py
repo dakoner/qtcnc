@@ -22,7 +22,8 @@ class Tui(QtCore.QObject):
         self.gamepad_thread.start()
 
         self.client = MqttClient(self)
-        self.client.hostname = "localhost"
+        self.client.hostname = "inspectionscope"
+
         self.client.connectToHost()
         self.client.stateChanged.connect(self.on_stateChanged)
         self.client.messageSignal.connect(self.on_messageSignal)
@@ -70,7 +71,7 @@ class Tui(QtCore.QObject):
 
     @QtCore.pyqtSlot(str, str)
     def on_messageSignal(self, topic, payload):
-        print("Message: ", topic, payload)
+        pass
         
     @QtCore.pyqtSlot(str, str, int)
     def on_gamepadSignal(self, type_, code, state):
@@ -92,7 +93,6 @@ class Tui(QtCore.QObject):
                     strength = (self.led_state)*1024
                     if strength == 0:
                         strength = 100
-                    print("led strength: ", strength)
                     cmd = "M3 S%d" % strength
                     self.client.publish("grblesp32/command", cmd)
         elif type_ == 'Absolute':
@@ -103,7 +103,6 @@ class Tui(QtCore.QObject):
                     if code == 'ABS_HAT0X':
                         dir_ = 'Y'
                     cmd = "$J=G91 F10000 %s%d" % (dir_, move)
-                    print("send cmd", cmd)
                     self.client.publish("grblesp32/command", cmd)
             elif code == 'ABS_X':
                 if abs(state) > 100:
